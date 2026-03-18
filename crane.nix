@@ -48,7 +48,7 @@ let
   ];
 
   crossArgs = let
-    rustTargetSpec = rust.toRustTargetSpec stdenv.hostPlatform;
+    rustTargetSpec = stdenv.hostPlatform.rust.rustcTargetSpec;
     rustTargetSpecEnv = lib.toUpper (builtins.replaceStrings [ "-" ] [ "_" ] rustTargetSpec);
   in lib.optionalAttrs (stdenv.hostPlatform != stdenv.buildPlatform) {
     depsBuildBuild = [ buildPackages.stdenv.cc ];

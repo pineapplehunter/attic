@@ -71,7 +71,7 @@ in
         bench = [
           wrk
         ] ++ lib.optionals pkgs.stdenv.isLinux [
-          linuxPackages.perf
+          perf
         ];
 
         wasm = [
