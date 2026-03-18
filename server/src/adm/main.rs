@@ -26,7 +26,7 @@ pub struct Opts {
 
 #[derive(Debug, Subcommand, EnumAsInner)]
 pub enum Command {
-    MakeToken(MakeToken),
+    MakeToken(Box<MakeToken>),
     ScrubStorage(ScrubStorage),
 }
 

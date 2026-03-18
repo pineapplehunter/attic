@@ -12,20 +12,13 @@ use crate::error::ServerResult;
 use crate::{RequestState, State};
 
 /// Auth state.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct AuthState {
     /// The JWT token.
     pub token: OnceCell<Token>,
 }
 
 impl AuthState {
-    /// Returns an auth state with no authenticated user and no permissions.
-    pub fn new() -> Self {
-        Self {
-            token: OnceCell::new(),
-        }
-    }
-
     /// Returns the username if it exists.
     ///
     /// Currently it's the `sub` claim of the JWT.

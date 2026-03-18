@@ -44,8 +44,8 @@ pub struct ShadowStore {
     store_root: TempDir,
 }
 
-impl ShadowStore {
-    pub fn new() -> Self {
+impl Default for ShadowStore {
+    fn default() -> Self {
         let store_root = TempfileBuilder::new()
             .prefix("shadow-store-")
             .tempdir()
@@ -62,7 +62,9 @@ impl ShadowStore {
 
         store
     }
+}
 
+impl ShadowStore {
     /// Returns the path to the store root.
     pub fn path(&self) -> &Path {
         self.store_root.path()

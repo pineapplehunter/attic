@@ -29,7 +29,7 @@ pub async fn init_request_state(
         };
 
     let req_state = Arc::new(RequestStateInner {
-        auth: AuthState::new(),
+        auth: AuthState::default(),
         api_endpoint: state.config.api_endpoint.to_owned(),
         substituter_endpoint: state.config.substituter_endpoint.to_owned(),
         host,

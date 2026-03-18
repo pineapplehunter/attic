@@ -37,10 +37,10 @@
 //! 1;{storePath};{narHash};{narSize};{commaDelimitedReferences}
 //! ```
 
+use std::fmt::{Display, Formatter};
 use std::os::unix::ffi::OsStrExt;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use std::string::ToString;
 
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -163,6 +163,12 @@ pub enum Compression {
     Zstd,
 }
 
+impl Display for Compression {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        self.as_str().fmt(f)
+    }
+}
+
 impl NarInfo {
     /// Parses a narinfo from a string.
     pub fn from_str(manifest: &str) -> ServerResult<Self> {
@@ -275,12 +281,6 @@ impl FromStr for Compression {
             }
             .into()),
         }
-    }
-}
-
-impl ToString for Compression {
-    fn to_string(&self) -> String {
-        String::from(self.as_str())
     }
 }
 

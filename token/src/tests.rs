@@ -28,7 +28,8 @@ fn test_basic() {
       }
     */
 
-    let tokens: &[(&str, Box<dyn Fn() -> Token>)] = &[
+    type Tokens<'a> = &'a [(&'a str, Box<dyn Fn() -> Token>)];
+    let tokens: Tokens = &[
         (
             "hs256",
             Box::new(|| {

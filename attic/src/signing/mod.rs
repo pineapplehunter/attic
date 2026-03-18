@@ -107,7 +107,7 @@ impl NixKeypair {
     }
 
     /// Imports an existing keypair from its canonical representation.
-    pub fn from_str(keypair: &str) -> AtticResult<Self> {
+    pub fn import(keypair: &str) -> AtticResult<Self> {
         let (name, bytes) = decode_string(keypair, "keypair", KeyPair::BYTES, None)?;
 
         let keypair = KeyPair::from_slice(&bytes).map_err(Error::SignatureError)?;
@@ -173,7 +173,7 @@ impl<'de> Deserialize<'de> for NixKeypair {
     {
         use de::Error;
         String::deserialize(deserializer)
-            .and_then(|s| Self::from_str(&s).map_err(|e| Error::custom(e.to_string())))
+            .and_then(|s| Self::import(&s).map_err(|e| Error::custom(e.to_string())))
     }
 }
 
@@ -189,7 +189,7 @@ impl Serialize for NixKeypair {
 
 impl NixPublicKey {
     /// Imports an existing public key from its canonical representation.
-    pub fn from_str(public_key: &str) -> AtticResult<Self> {
+    pub fn import(public_key: &str) -> AtticResult<Self> {
         let (name, bytes) = decode_string(public_key, "public key", PublicKey::BYTES, None)?;
 
         let public = PublicKey::from_slice(&bytes).map_err(Error::SignatureError)?;

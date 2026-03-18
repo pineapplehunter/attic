@@ -29,8 +29,10 @@ where
     digest: Option<D>,
     bytes_hashed: usize,
     bytes_consumed: usize,
-    finalized: Arc<OnceCell<(DigestOutput<D>, usize)>>,
+    finalized: DigestCache<D>,
 }
+
+type DigestCache<D> = Arc<OnceCell<(DigestOutput<D>, usize)>>;
 
 impl<D> State<D>
 where
@@ -66,7 +68,7 @@ where
     R: AsyncRead + Unpin,
     D: Digest + Unpin,
 {
-    pub fn new(inner: R, digest: D) -> (Self, Arc<OnceCell<(DigestOutput<D>, usize)>>) {
+    pub fn new(inner: R, digest: D) -> (Self, DigestCache<D>) {
         let finalized = Arc::new(OnceCell::new());
 
         (
@@ -101,7 +103,7 @@ where
 
         let filled = buf.filled();
         let unconsumed = &filled[old_filled..];
-        if unconsumed.len() == 0 {
+        if unconsumed.is_empty() {
             this.state.eof();
         } else {
             this.state.hash_unconsumed(unconsumed);
@@ -122,7 +124,7 @@ where
         let this = self.project();
         let unconsumed = ready!(this.inner.poll_fill_buf(cx))?;
 
-        if unconsumed.len() == 0 {
+        if unconsumed.is_empty() {
             this.state.eof();
         } else {
             this.state.hash_unconsumed(unconsumed);
@@ -158,7 +160,7 @@ mod tests {
         assert!(finalized.get().is_none());
 
         // force multiple reads
-        let mut buf = vec![0u8; 100];
+        let mut buf = [0u8; 100];
         let mut bytes_read = 0;
         bytes_read += read
             .read(&mut buf[bytes_read..bytes_read + 5])
@@ -197,7 +199,7 @@ mod tests {
         let (mut read, finalized) = HashReader::new(expected.as_slice(), sha2::Sha256::new());
         assert!(finalized.get().is_none());
 
-        let mut buf = vec![0u8; 100];
+        let mut buf = [0u8; 100];
         let mut bytes_read = 0;
 
         // Mix AsyncRead::read() and AsyncBufRead::fill_buf()

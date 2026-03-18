@@ -3,6 +3,7 @@
 //! We automatically edit the user's `nix.conf` to add new
 //! binary caches while trying to keep the formatting intact.
 
+use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
@@ -53,6 +54,38 @@ enum Line {
     },
 }
 
+impl Display for NixConfig {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        for line in &self.lines {
+            writeln!(f, "{}", line)?;
+        }
+        Ok(())
+    }
+}
+
+impl Display for Line {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Line::Comment(s) => write!(f, "{s}"),
+            Line::KV {
+                key,
+                value,
+                whitespace_s,
+                whitespace_l,
+                whitespace_r,
+                comment,
+            } => {
+                let cmt = comment.as_deref().unwrap_or("");
+                write!(
+                    f,
+                    "{whitespace_s}{key}{whitespace_l}={whitespace_r}{value}{cmt}",
+                )?;
+                Ok(())
+            }
+        }
+    }
+}
+
 impl NixConfig {
     pub async fn load() -> Result<Self> {
         let nix_base = BaseDirectories::with_prefix("nix");
@@ -74,7 +107,7 @@ impl NixConfig {
     /// Saves the modified configuration file.
     pub async fn save(&self) -> Result<()> {
         if let Some(path) = &self.path {
-            fs::write(path, self.to_string()).await?;
+            fs::write(path, self.to_config_string()).await?;
             Ok(())
         } else {
             Err(anyhow!("Don't know how to save the nix.conf"))
@@ -82,12 +115,8 @@ impl NixConfig {
     }
 
     /// Reserialize the configuration back to a string.
-    pub fn to_string(&self) -> String {
-        self.lines
-            .iter()
-            .map(|l| l.to_string())
-            .collect::<Vec<_>>()
-            .join("\n")
+    pub fn to_config_string(&self) -> String {
+        format!("{}", self)
     }
 
     /// Adds a new substituter.
@@ -170,23 +199,6 @@ impl Line {
         }
 
         Err(anyhow!("Line \"{}\" isn't valid", line))
-    }
-
-    fn to_string(&self) -> String {
-        match self {
-            Self::Comment(l) => l.clone(),
-            Self::KV {
-                key,
-                value,
-                whitespace_s,
-                whitespace_l,
-                whitespace_r,
-                comment,
-            } => {
-                let cmt = comment.as_deref().unwrap_or("");
-                format!("{whitespace_s}{key}{whitespace_l}={whitespace_r}{value}{cmt}")
-            }
-        }
     }
 
     fn kv(key: String, value: String) -> Self {

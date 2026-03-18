@@ -1,12 +1,12 @@
 //! Utilities for testing the NAR dump functionality.
 
 use std::collections::HashSet;
-use std::io;
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
 use std::process::Stdio;
 use std::sync::Arc;
 use std::task::{Context, Poll};
+use std::{io, iter};
 
 use tempfile::NamedTempFile;
 use tokio::fs::{File, OpenOptions};
@@ -119,7 +119,7 @@ impl TestNar {
         let output = child.wait_with_output().await?;
         if !output.status.success() {
             let e = format!("Nix exit with code {:?}", output.status.code());
-            return Err(io::Error::new(io::ErrorKind::Other, e));
+            return Err(io::Error::other(e));
         }
 
         // ensure that we imported the correct thing
@@ -130,7 +130,7 @@ impl TestNar {
                 "Import resulted in \"{}\", but we want \"{}\"",
                 store_path, self.store_path
             );
-            return Err(io::Error::new(io::ErrorKind::Other, e));
+            return Err(io::Error::other(e));
         }
 
         Ok(())
@@ -207,12 +207,9 @@ impl NarDump {
         if bytes != self.expected.nar {
             assert_eq!(bytes.len(), self.expected.nar.len());
 
-            for i in 0..bytes.len() {
-                if bytes[i] != self.expected.nar[i] {
-                    eprintln!(
-                        "Byte {} mismatch - We got {}, should be {}",
-                        i, bytes[i], self.expected.nar[i]
-                    );
+            for (i, (b, e)) in iter::zip(bytes, self.expected.nar).enumerate() {
+                if b != *e {
+                    eprintln!("Byte {i} mismatch - We got {b}, should be {e}");
                 }
             }
 

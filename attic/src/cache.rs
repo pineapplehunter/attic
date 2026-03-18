@@ -9,6 +9,7 @@
 //!
 /// The plus sign is intended to be used as the delimiter between a
 /// namespace and a user-given name (e.g., `zhaofengli+shared`).
+use std::fmt::{Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;
 
@@ -80,10 +81,6 @@ impl CacheName {
         &self.0
     }
 
-    pub fn to_string(&self) -> String {
-        self.0.clone()
-    }
-
     /// Returns the corresponding pattern that only matches this cache.
     pub fn to_pattern(&self) -> CacheNamePattern {
         CacheNamePattern {
@@ -105,11 +102,17 @@ impl CacheName {
     }
 }
 
+impl Display for CacheName {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
 impl FromStr for CacheName {
     type Err = AtticError;
 
-    fn from_str(name: &str) -> AtticResult<Self> {
-        Self::new(name.to_owned())
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::new(s.to_string())
     }
 }
 

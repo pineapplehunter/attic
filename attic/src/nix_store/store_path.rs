@@ -3,7 +3,7 @@
 use std::ffi::OsStr;
 use std::os::unix::ffi::OsStrExt;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use tokio::task::spawn_blocking;
 
@@ -15,7 +15,7 @@ use crate::hash::Hash;
 /// High-level wrapper for the Unix Domain Socket Nix Store.
 pub struct NixStore {
     /// The Nix store FFI.
-    inner: Arc<FfiNixStore>,
+    inner: Arc<Mutex<FfiNixStore>>,
 
     /// Path to the Nix store itself.
     store_dir: PathBuf,
@@ -25,11 +25,11 @@ pub struct NixStore {
 impl NixStore {
     pub fn connect() -> AtticResult<Self> {
         #[allow(unsafe_code)]
-        let inner = unsafe { open_nix_store()? };
+        let mut inner = unsafe { open_nix_store()? };
         let store_dir = PathBuf::from(inner.store().store_dir());
 
         Ok(Self {
-            inner: Arc::new(inner),
+            inner: Arc::new(Mutex::new(inner)),
             store_dir,
         })
     }
@@ -95,7 +95,12 @@ impl NixStore {
         spawn_blocking(move || {
             // Send all exceptions through the channel, and ignore errors
             // during sending (the channel may have been closed).
-            if let Err(e) = inner.store().nar_from_path(base_name, sender.clone()) {
+            if let Err(e) = inner
+                .lock()
+                .unwrap()
+                .store()
+                .nar_from_path(base_name, sender.clone())
+            {
                 let _ = sender.rust_error(e);
             }
         });
@@ -119,7 +124,7 @@ impl NixStore {
         spawn_blocking(move || {
             let base_name = store_path.as_base_name_bytes();
 
-            let cxx_vector = inner.store().compute_fs_closure(
+            let cxx_vector = inner.lock().unwrap().store().compute_fs_closure(
                 base_name,
                 flip_directions,
                 include_outputs,
@@ -165,7 +170,7 @@ impl NixStore {
                 .map(|sp| sp.as_base_name_bytes())
                 .collect();
 
-            let cxx_vector = inner.store().compute_fs_closure_multi(
+            let cxx_vector = inner.lock().unwrap().store().compute_fs_closure_multi(
                 &plain_base_names,
                 flip_directions,
                 include_outputs,
@@ -197,7 +202,7 @@ impl NixStore {
 
         spawn_blocking(move || {
             let base_name = store_path.as_base_name_bytes();
-            let mut c_path_info = inner.store().query_path_info(base_name)?;
+            let mut c_path_info = inner.lock().unwrap().store().query_path_info(base_name)?;
 
             // FIXME: Make this more ergonomic and efficient
             let nar_size = c_path_info.pin_mut().nar_size();

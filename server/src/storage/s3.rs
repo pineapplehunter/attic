@@ -384,7 +384,7 @@ impl StorageBackend for S3Backend {
             .await;
 
         match result {
-            Ok(output) => output.content_length.map(|v| v as i64).ok_or_else(|| {
+            Ok(output) => output.content_length.ok_or_else(|| {
                 ErrorKind::StorageError(anyhow::anyhow!("S3 object has no content length")).into()
             }),
             Err(e) => {
