@@ -3,11 +3,13 @@ use std::sync::Arc;
 
 use anyhow::anyhow;
 use axum::{
-    extract::{Extension, Host, Request},
+    extract::{Extension, Request},
     http::HeaderValue,
     middleware::Next,
     response::Response,
 };
+use axum_extra::headers::Host;
+use axum_extra::TypedHeader;
 
 use super::{AuthState, RequestState, RequestStateInner, State};
 use crate::error::{ErrorKind, ServerResult};
@@ -16,7 +18,7 @@ use attic::api::binary_cache::ATTIC_CACHE_VISIBILITY;
 /// Initializes per-request state.
 pub async fn init_request_state(
     Extension(state): Extension<State>,
-    Host(host): Host,
+    TypedHeader(host): TypedHeader<Host>,
     mut req: Request,
     next: Next,
 ) -> Response {
@@ -32,7 +34,7 @@ pub async fn init_request_state(
         auth: AuthState::default(),
         api_endpoint: state.config.api_endpoint.to_owned(),
         substituter_endpoint: state.config.substituter_endpoint.to_owned(),
-        host,
+        host: host.hostname().to_owned(),
         client_claims_https,
         public_cache: AtomicBool::new(false),
     });
@@ -47,13 +49,13 @@ pub async fn init_request_state(
 /// the first place.
 pub async fn restrict_host(
     Extension(state): Extension<State>,
-    Host(host): Host,
+    TypedHeader(host): TypedHeader<Host>,
     req: Request,
     next: Next,
 ) -> ServerResult<Response> {
     let allowed_hosts = &state.config.allowed_hosts;
 
-    if !allowed_hosts.is_empty() && !allowed_hosts.iter().any(|h| h.as_str() == host) {
+    if !allowed_hosts.is_empty() && !allowed_hosts.iter().any(|h| h.as_str() == host.hostname()) {
         return Err(ErrorKind::RequestError(anyhow!("Bad Host")).into());
     }
 

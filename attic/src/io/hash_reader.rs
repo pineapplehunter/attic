@@ -3,8 +3,8 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{ready, Context, Poll};
 
-use digest::{Digest, Output as DigestOutput};
 use pin_project::pin_project;
+use sha2::digest::{Digest, Output as DigestOutput};
 use tokio::io::{self, AsyncBufRead, AsyncRead, ReadBuf};
 use tokio::sync::OnceCell;
 
