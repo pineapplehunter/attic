@@ -1,6 +1,6 @@
 # Development shells
 
-toplevel @ { lib, flake-parts-lib, ... }:
+toplevel@{ lib, flake-parts-lib, ... }:
 let
   inherit (lib)
     mkOption
@@ -16,102 +16,117 @@ in
       options.attic.devshell = {
         packageSets = mkOption {
           type = types.attrsOf (types.listOf types.package);
-          default = {};
+          default = { };
         };
         extraPackages = mkOption {
           type = types.listOf types.package;
-          default = [];
+          default = [ ];
         };
         extraArgs = mkOption {
           type = types.attrsOf types.unspecified;
-          default = {};
+          default = { };
         };
       };
     };
   };
 
   config = {
-    perSystem = { self', pkgs, config, ... }: let
-      cfg = config.attic.devshell;
-    in {
-      attic.devshell.packageSets = with pkgs; {
-        rustc = lib.optionals (config.attic.toolchain == null) [
-          rustc
-        ];
+    perSystem =
+      {
+        self',
+        pkgs,
+        config,
+        ...
+      }:
+      let
+        cfg = config.attic.devshell;
+      in
+      {
+        attic.devshell.packageSets = with pkgs; {
+          rustc = lib.optionals (config.attic.toolchain == null) [
+            rustc
+          ];
 
-        rust = [
-          cargo-audit
-          cargo-expand
-          cargo-outdated
-          cargo-edit
-          cargo-udeps
-          tokio-console
-          rustPlatform.bindgenHook
-          rust-analyzer
-        ];
+          rust = [
+            cargo-audit
+            cargo-expand
+            cargo-outdated
+            cargo-edit
+            cargo-udeps
+            tokio-console
+            rustPlatform.bindgenHook
+            rust-analyzer
+          ];
 
-        linters = [
-          clippy
-          rustfmt
+          linters = [
+            clippy
+            rustfmt
 
-          editorconfig-checker
-        ];
+            editorconfig-checker
+          ];
 
-        utils = [
-          jq
-          just
-          cmake
-        ];
+          utils = [
+            jq
+            just
+            cmake
+          ];
 
-        ops = [
-          postgresql
-          sqlite-interactive
+          ops = [
+            postgresql
+            sqlite-interactive
 
-          skopeo
-          manifest-tool
-        ];
+            skopeo
+            manifest-tool
+          ];
 
-        bench = [
-          wrk
-        ] ++ lib.optionals pkgs.stdenv.isLinux [
-          perf
-        ];
+          bench = [
+            wrk
+          ]
+          ++ lib.optionals pkgs.stdenv.isLinux [
+            perf
+          ];
 
-        wasm = [
-          llvmPackages_latest.bintools
-          worker-build wasm-pack wasm-bindgen-cli
-        ];
-      };
-
-      devShells.default = pkgs.mkShell (lib.recursiveUpdate {
-        inputsFrom = [
-          self'.packages.attic
-          self'.packages.book
-        ];
-
-        packages = lib.flatten (lib.attrValues cfg.packageSets);
-
-        env = {
-          ATTIC_DISTRIBUTOR = toplevel.config.attic.distributor;
-
-          RUST_SRC_PATH = pkgs.rustPlatform.rustLibSrc;
-
-          NIX_PATH = "nixpkgs=${pkgs.path}";
-
-          # Used by `just with-nix` to build/test with alternative Nix versions.
-          NIX_VERSIONS = config.attic.nix-versions.manifestFile;
+          wasm = [
+            llvmPackages_latest.bintools
+            worker-build
+            wasm-pack
+            wasm-bindgen-cli
+          ];
         };
-      } cfg.extraArgs);
 
-      devShells.demo = pkgs.mkShell {
-        packages = [ self'.packages.default ];
+        devShells.default = pkgs.mkShell (
+          lib.recursiveUpdate {
+            inputsFrom = [
+              self'.packages.attic
+              self'.packages.book
+            ];
 
-        shellHook = ''
-          >&2 echo
-          >&2 echo '🚀 Run `atticd` to get started!'
-          >&2 echo
-        '';
+            packages = lib.flatten (lib.attrValues cfg.packageSets);
+
+            env = {
+              ATTIC_DISTRIBUTOR = toplevel.config.attic.distributor;
+
+              RUST_SRC_PATH = pkgs.rustPlatform.rustLibSrc;
+
+              NIX_PATH = "nixpkgs=${pkgs.path}";
+
+              # Used by `just with-nix` to build/test with alternative Nix versions.
+              NIX_VERSIONS = config.attic.nix-versions.manifestFile;
+            };
+          } cfg.extraArgs
+        );
+
+        devShells.demo = pkgs.mkShell {
+          packages = [ self'.packages.default ];
+
+          shellHook = ''
+            >&2 echo
+            >&2 echo '🚀 Run `atticd` to get started!'
+            >&2 echo
+          '';
+        };
+
+        formatter = pkgs.nixfmt-tree;
       };
-    };
   };
 }

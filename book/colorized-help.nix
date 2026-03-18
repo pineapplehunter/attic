@@ -1,4 +1,10 @@
-{ lib, stdenv, runCommand, attic, ansi2html }:
+{
+  lib,
+  stdenv,
+  runCommand,
+  attic,
+  ansi2html,
+}:
 
 with builtins;
 
@@ -28,9 +34,13 @@ let
     mkdir -p $out
     (
       ansi2html -H
-      ${lib.concatMapStrings (subcommand: let
-        fullCommand = "${name} ${if subcommand == null then "" else subcommand}";
-      in "${renderCommand fullCommand}\n") subcommands}
+      ${lib.concatMapStrings (
+        subcommand:
+        let
+          fullCommand = "${name} ${if subcommand == null then "" else subcommand}";
+        in
+        "${renderCommand fullCommand}\n"
+      ) subcommands}
     ) >>$out/${name}.md
   '';
   renderCommand = fullCommand: ''
@@ -39,6 +49,10 @@ let
     TERM=xterm-256color CLICOLOR_FORCE=1 ${fullCommand} --help | ansi2html -p
     echo '</div></pre>'
   '';
-in runCommand "attic-colorized-help" {
-  nativeBuildInputs = [ attic ansi2html ];
+in
+runCommand "attic-colorized-help" {
+  nativeBuildInputs = [
+    attic
+    ansi2html
+  ];
 } (concatStringsSep "\n" (lib.mapAttrsToList renderMarkdown commands))

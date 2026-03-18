@@ -72,7 +72,10 @@ let
 in
 {
   imports = [
-    (lib.mkRenamedOptionModule [ "services" "atticd" "credentialsFile" ] [ "services" "atticd" "environmentFile" ])
+    (lib.mkRenamedOptionModule
+      [ "services" "atticd" "credentialsFile" ]
+      [ "services" "atticd" "environmentFile" ]
+    )
   ];
 
   disabledModules = [ "services/networking/atticd.nix" ];

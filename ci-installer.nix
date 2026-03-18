@@ -1,12 +1,13 @@
 # Generates a script to bootstrap the Attic client with a substituter for
 # CI usage. Will be simplier when Attic is in cache.nixos.org.
 
-{ self
-, writeText
-, writeScript
+{
+  self,
+  writeText,
+  writeScript,
 
-, substituter ? "https://staging.attic.rs/attic-ci"
-, trustedPublicKey ? "attic-ci:U5Sey4mUxwBXM3iFapmP0/ogODXywKLRNgRPQpEXxbo="
+  substituter ? "https://staging.attic.rs/attic-ci",
+  trustedPublicKey ? "attic-ci:U5Sey4mUxwBXM3iFapmP0/ogODXywKLRNgRPQpEXxbo=",
 }:
 
 let
@@ -39,18 +40,23 @@ let
     in
   '';
 
-  makeBootstrap = system: let
-    package =
-      if system == "x86_64-linux" then self.packages.${system}.attic-client-static
-      else self.packages.${system}.attic-client;
-  in ''
-    "${system}" = (mkFakeDerivation {
-      name = "${package.name}";
-      system = "${system}";
-    } {
-      out = "${package.out}";
-    }).out;
-  '';
+  makeBootstrap =
+    system:
+    let
+      package =
+        if system == "x86_64-linux" then
+          self.packages.${system}.attic-client-static
+        else
+          self.packages.${system}.attic-client;
+    in
+    ''
+      "${system}" = (mkFakeDerivation {
+        name = "${package.name}";
+        system = "${system}";
+      } {
+        out = "${package.out}";
+      }).out;
+    '';
 
   bootstrapExpr = ''
     { system ? builtins.currentSystem }:
@@ -78,4 +84,5 @@ let
 
     nix-env --substituters "${substituter} ${cacheNixosOrg}" --trusted-public-keys "${trustedPublicKey} ${cacheNixosOrgKey}" -if "$expr"
   '';
-in bootstrapScript
+in
+bootstrapScript

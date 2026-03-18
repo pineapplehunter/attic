@@ -1,4 +1,11 @@
-{ pkgs, lib, config, flake, attic, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  flake,
+  attic,
+  ...
+}:
 let
   inherit (lib) types;
 
@@ -83,53 +90,62 @@ let
   };
 
   storageModules = {
-    local = {};
-    minio = let
-      accessKey = "legit";
-      secretKey = "111-1111111";
-    in {
-      server = {
-        services.minio = {
-          enable = true;
-          rootCredentialsFile = "/etc/minio.env";
-        };
+    local = { };
+    minio =
+      let
+        accessKey = "legit";
+        secretKey = "111-1111111";
+      in
+      {
+        server = {
+          services.minio = {
+            enable = true;
+            rootCredentialsFile = "/etc/minio.env";
+          };
 
-        # For testing only - Don't actually do this
-        environment.etc."minio.env".text = ''
-          MINIO_ROOT_USER=${accessKey}
-          MINIO_ROOT_PASSWORD=${secretKey}
-        '';
+          # For testing only - Don't actually do this
+          environment.etc."minio.env".text = ''
+            MINIO_ROOT_USER=${accessKey}
+            MINIO_ROOT_PASSWORD=${secretKey}
+          '';
 
-        networking.firewall.allowedTCPPorts = [ 9000 ];
+          networking.firewall.allowedTCPPorts = [ 9000 ];
 
-        services.atticd.settings = {
-          storage = {
-            type = "s3";
-            endpoint = "http://server:9000";
-            region = "us-east-1";
-            bucket = "attic";
-            credentials = {
-              access_key_id = accessKey;
-              secret_access_key = secretKey;
+          services.atticd.settings = {
+            storage = {
+              type = "s3";
+              endpoint = "http://server:9000";
+              region = "us-east-1";
+              bucket = "attic";
+              credentials = {
+                access_key_id = accessKey;
+                secret_access_key = secretKey;
+              };
             };
           };
         };
+        testScript = ''
+          server.succeed("mkdir /var/lib/minio/data/attic")
+          server.succeed("chown minio: /var/lib/minio/data/attic")
+          client.wait_until_succeeds("curl http://server:9000", timeout=20)
+        '';
       };
-      testScript = ''
-        server.succeed("mkdir /var/lib/minio/data/attic")
-        server.succeed("chown minio: /var/lib/minio/data/attic")
-        client.wait_until_succeeds("curl http://server:9000", timeout=20)
-      '';
-    };
   };
-in {
+in
+{
   options = {
     database = lib.mkOption {
-      type = types.enum [ "sqlite" "postgres" ];
+      type = types.enum [
+        "sqlite"
+        "postgres"
+      ];
       default = "sqlite";
     };
     storage = lib.mkOption {
-      type = types.enum [ "local" "minio" ];
+      type = types.enum [
+        "local"
+        "minio"
+      ];
       default = "local";
     };
   };
@@ -141,8 +157,8 @@ in {
       server = {
         imports = [
           flake.nixosModules.atticd
-          (databaseModules.${config.database}.server or {})
-          (storageModules.${config.storage}.server or {})
+          (databaseModules.${config.database}.server or { })
+          (storageModules.${config.storage}.server or { })
         ];
 
         # For testing only - Don't actually do this
@@ -167,7 +183,10 @@ in {
           };
         };
 
-        environment.systemPackages = [ pkgs.openssl pkgs.attic-server ];
+        environment.systemPackages = [
+          pkgs.openssl
+          pkgs.attic-server
+        ];
 
         networking.firewall.allowedTCPPorts = [ 8080 ];
       };
@@ -254,10 +273,10 @@ in {
           client.fail(f"curl -sL --fail-with-body http://server:8080/test/{test_file_hash}.narinfo")
 
       ${lib.optionalString (config.storage == "local") ''
-      with subtest("Check that all chunks are actually deleted after GC"):
-          files = server.succeed("find /var/lib/atticd/storage -type f ! -name 'VERSION'")
-          print(f"Remaining files: {files}")
-          assert files.strip() == "", "Some files remain after GC: " + files
+        with subtest("Check that all chunks are actually deleted after GC"):
+            files = server.succeed("find /var/lib/atticd/storage -type f ! -name 'VERSION'")
+            print(f"Remaining files: {files}")
+            assert files.strip() == "", "Some files remain after GC: " + files
       ''}
 
       with subtest("Check that we can include the upload info in the payload"):

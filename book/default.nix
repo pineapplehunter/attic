@@ -1,19 +1,30 @@
-{ lib, stdenv, nix-gitignore, mdbook, mdbook-linkcheck, python3, callPackage, writeScript
-, attic ? null
+{
+  lib,
+  stdenv,
+  nix-gitignore,
+  mdbook,
+  mdbook-linkcheck,
+  python3,
+  callPackage,
+  writeScript,
+  attic ? null,
 }:
 
 let
-  colorizedHelp = let
-    help = callPackage ./colorized-help.nix {
-      inherit attic;
-    };
-  in if attic != null then help else null;
-in stdenv.mkDerivation {
+  colorizedHelp =
+    let
+      help = callPackage ./colorized-help.nix {
+        inherit attic;
+      };
+    in
+    if attic != null then help else null;
+in
+stdenv.mkDerivation {
   inherit colorizedHelp;
 
   name = "attic-book";
 
-  src = nix-gitignore.gitignoreSource [] ./.;
+  src = nix-gitignore.gitignoreSource [ ] ./.;
 
   nativeBuildInputs = [ mdbook ];
 
