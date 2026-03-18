@@ -1,5 +1,3 @@
-#![allow(deprecated)]
-
 use std::io;
 
 use std::io::Cursor;

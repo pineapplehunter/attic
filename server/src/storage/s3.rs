@@ -1,7 +1,5 @@
 //! S3 remote files.
 
-#![allow(deprecated)]
-
 use std::time::Duration;
 
 use async_trait::async_trait;
