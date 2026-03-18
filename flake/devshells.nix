@@ -46,6 +46,8 @@ in
           cargo-edit
           cargo-udeps
           tokio-console
+          rustPlatform.bindgenHook
+          rust-analyzer
         ];
 
         linters = [
@@ -58,6 +60,7 @@ in
         utils = [
           jq
           just
+          cmake
         ];
 
         ops = [

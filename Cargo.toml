@@ -1,12 +1,7 @@
 [workspace]
 resolver = "2"
 
-members = [
-	"attic",
-	"client",
-	"server",
-	"token",
-]
+members = ["attic", "client", "server", "token"]
 
 [workspace.dependencies]
 anyhow = "1.0.98"
@@ -19,7 +14,7 @@ clap = { version = "4.5", features = ["derive"] }
 derive_more = { version = "2.0.1", features = ["debug"] }
 digest = "0.10.7"
 displaydoc = "0.2.5"
-enum-as-inner = "0.6.1"
+enum-as-inner = "0.7"
 futures = "0.3.31"
 hex = "0.4.3"
 http-body-util = "0.1.3"
@@ -29,7 +24,10 @@ lazy_static = "1.5.0"
 pin-project = "1.1.10"
 rand = "0.8.5"
 regex = "1.11.1"
-reqwest = { version = "0.12.22", default-features = false, features = ["json", "rustls-tls", "rustls-tls-native-roots", "stream"] }
+reqwest = { version = "0.13", default-features = false, features = [
+	"json",
+	"stream",
+] }
 rsa = "0.9.8"
 ryu = "1.0.20"
 serde = { version = "1.0.219", features = ["derive"] }
@@ -38,7 +36,7 @@ serde_with = "3.14.0"
 sha2 = "0.10.9"
 tokio = "1.46.1"
 tokio-util = "0.7.15"
-toml = "0.8.23"
+toml = "1.0"
 tracing = "0.1.41"
 tracing-error = "0.2.1"
 tracing-subscriber = "0.3.19"
@@ -46,7 +44,7 @@ uuid = { version = "1.17.0", features = ["v4"] }
 xdg = "3.0.0"
 
 # Dev dependencies
-criterion = { version = "0.6.0", features = ["html_reports", "async_tokio"] }
+criterion = { version = "0.8.0", features = ["html_reports", "async_tokio"] }
 fastcdc = { version = "3.2.1", features = ["tokio"] }
 
 [workspace.dependencies.sea-orm]
@@ -61,9 +59,4 @@ features = [
 
 [workspace.dependencies.async-compression]
 version = "0.4.25"
-features = [
-	"tokio",
-	"xz",
-	"zstd",
-	"brotli",
-]
+features = ["tokio", "xz", "zstd", "brotli"]

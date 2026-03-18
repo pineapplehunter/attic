@@ -256,7 +256,8 @@ impl Token {
             accept_future: false,
             required_subject: None,
             required_key_id: None,
-            required_public_key: None,
+            required_signature_type: None,
+            required_content_type: None,
             required_nonce: None,
             allowed_issuers: maybe_bound_issuer
                 .as_ref()

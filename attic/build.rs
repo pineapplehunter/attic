@@ -38,6 +38,7 @@ mod nix_store {
             .file("src/nix_store/bindings/nix.cpp")
             .flag("-std=c++23")
             .flag("-O2")
+            .flag("-Wno-unused-function")
             .includes(deps.all_include_paths());
 
         apply_variant_flags(&mut build, &deps);

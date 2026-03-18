@@ -5,9 +5,8 @@
 , lib
 , buildPackages
 , craneLib
-, rust
-, runCommand
-, writeClosure
+, rustPlatform
+, cmake
 , pkg-config
 , installShellFiles
 , jq
@@ -39,7 +38,9 @@ let
 
   nativeBuildInputs = [
     pkg-config
+    cmake
     installShellFiles
+    rustPlatform.bindgenHook
   ];
 
   buildInputs = [
