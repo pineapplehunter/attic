@@ -40,7 +40,6 @@ in
         self',
         pkgs,
         config,
-        cranePkgs,
         ...
       }:
       let
@@ -72,10 +71,10 @@ in
         internalMatrix = lib.mapAttrs (
           _: nix:
           let
-            cranePkgs' = cranePkgs.override { inherit nix; };
+            atticPkgs' = pkgs.callPackage ../crane.nix { nix = nix; };
           in
           {
-            inherit (cranePkgs') attic-tests cargoArtifacts;
+            inherit (atticPkgs') attic-tests;
           }
         ) cfg.versions;
       };

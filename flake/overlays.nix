@@ -1,13 +1,13 @@
-{ makeCranePkgs, ... }:
+{ ... }:
 {
   flake.overlays = {
     default =
       final: prev:
       let
-        cranePkgs = makeCranePkgs final;
+        atticPkgs = final.callPackage ../crane.nix { };
       in
       {
-        inherit (cranePkgs)
+        inherit (atticPkgs)
           attic
           attic-client
           attic-server
