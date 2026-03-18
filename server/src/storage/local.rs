@@ -214,4 +214,28 @@ impl StorageBackend for LocalBackend {
     async fn make_db_reference(&self, name: String) -> ServerResult<RemoteFile> {
         Ok(RemoteFile::Local(LocalRemoteFile { name }))
     }
+
+    async fn file_size(&self, file: &RemoteFile) -> ServerResult<i64> {
+        let file = if let RemoteFile::Local(file) = file {
+            file
+        } else {
+            return Err(ErrorKind::StorageError(anyhow::anyhow!(
+                "Does not understand the remote file reference"
+            ))
+            .into());
+        };
+
+        let path = self.get_path(&file.name);
+        if !path.exists() {
+            return Err(ErrorKind::StorageError(anyhow::anyhow!(
+                "File not found: {}",
+                path.display()
+            ))
+            .into());
+        }
+        let metadata = tokio::fs::metadata(&path)
+            .await
+            .map_err(ServerError::storage_error)?;
+        Ok(metadata.len() as i64)
+    }
 }

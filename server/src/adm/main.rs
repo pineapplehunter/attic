@@ -8,6 +8,7 @@ use enum_as_inner::EnumAsInner;
 
 use attic_server::config;
 use command::make_token::{self, MakeToken};
+use command::scrub_storage::{self, ScrubStorage};
 
 /// Attic server administration utilities.
 #[derive(Debug, Parser)]
@@ -26,6 +27,7 @@ pub struct Opts {
 #[derive(Debug, Subcommand, EnumAsInner)]
 pub enum Command {
     MakeToken(MakeToken),
+    ScrubStorage(ScrubStorage),
 }
 
 #[tokio::main]
@@ -35,6 +37,7 @@ async fn main() -> Result<()> {
 
     match opts.command {
         Command::MakeToken(_) => make_token::run(config, opts).await?,
+        Command::ScrubStorage(_) => scrub_storage::run(config, opts).await?,
     }
 
     Ok(())

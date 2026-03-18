@@ -69,6 +69,9 @@ pub trait StorageBackend: Send + Sync + std::fmt::Debug {
 
     /// Creates a database reference for a file.
     async fn make_db_reference(&self, name: String) -> ServerResult<RemoteFile>;
+
+    /// Gets the size of a file in storage.
+    async fn file_size(&self, file: &RemoteFile) -> ServerResult<i64>;
 }
 
 /// Reference to an HTTP link from which the file can be downloaded.

@@ -95,7 +95,8 @@ struct RequestStateInner {
 }
 
 impl StateInner {
-    async fn new(config: Config) -> State {
+    /// Creates a new state.
+    pub async fn new(config: Config) -> State {
         Arc::new(Self {
             config,
             database: OnceCell::new(),
@@ -104,7 +105,7 @@ impl StateInner {
     }
 
     /// Returns a handle to the database.
-    async fn database(&self) -> ServerResult<&DatabaseConnection> {
+    pub async fn database(&self) -> ServerResult<&DatabaseConnection> {
         self.database
             .get_or_try_init(|| async {
                 let db = Database::connect(&self.config.database.url)
@@ -134,7 +135,7 @@ impl StateInner {
     }
 
     /// Returns a handle to the storage backend.
-    async fn storage(&self) -> ServerResult<&Arc<Box<dyn StorageBackend>>> {
+    pub async fn storage(&self) -> ServerResult<&Arc<Box<dyn StorageBackend>>> {
         self.storage
             .get_or_try_init(|| async {
                 match &self.config.storage {

@@ -372,4 +372,45 @@ impl StorageBackend for S3Backend {
             key: name,
         }))
     }
+
+    async fn file_size(&self, file: &RemoteFile) -> ServerResult<i64> {
+        let (client, file) = self.get_client_from_db_ref(file).await?;
+
+        let result = client
+            .head_object()
+            .bucket(&file.bucket)
+            .key(&file.key)
+            .send()
+            .await;
+
+        match result {
+            Ok(output) => output.content_length.map(|v| v as i64).ok_or_else(|| {
+                ErrorKind::StorageError(anyhow::anyhow!("S3 object has no content length")).into()
+            }),
+            Err(e) => {
+                let err_str = format!("{:?}", e);
+                if err_str.contains("NotFound") || err_str.contains("NoSuchKey") {
+                    Err(ErrorKind::StorageError(anyhow::anyhow!(
+                        "File not found in S3: {}",
+                        file.key
+                    ))
+                    .into())
+                } else {
+                    struct S3Error(String);
+                    impl std::fmt::Debug for S3Error {
+                        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                            write!(f, "{}", self.0)
+                        }
+                    }
+                    impl std::fmt::Display for S3Error {
+                        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                            write!(f, "{}", self.0)
+                        }
+                    }
+                    impl std::error::Error for S3Error {}
+                    Err(ServerError::storage_error(S3Error(err_str)))
+                }
+            }
+        }
+    }
 }
