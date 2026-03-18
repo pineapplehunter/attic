@@ -98,10 +98,10 @@ in
 
       (lib.mkIf pkgs.stdenv.isLinux {
         packages = {
-          attic-server-image = pkgs.dockerTools.buildImage {
+          attic-server-image = pkgs.dockerTools.streamLayeredImage {
             name = "attic-server";
             tag = "main";
-            copyToRoot = [
+            contents = [
               self'.packages.attic-server
 
               # Debugging utilities for `fly ssh console`
